@@ -323,11 +323,6 @@ int main()
                     }
                     else
                     {
-                        // redirect to center lane
-                        // if (lane != 1)
-                        //     if ((lane == 2 && !car_to_left) || (lane == 0 &&
-                        //     !car_to_right))
-                        //         lane = 1; // change lane to CENTER
                         if (ref_vel < 49.5)
                             ref_vel += 0.224;
                     }

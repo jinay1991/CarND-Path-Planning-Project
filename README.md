@@ -39,7 +39,7 @@ Here is the data provided from the Simulator to the C++ Program
 
 #### Previous path data given to the Planner
 
-//Note: Return the previous list but with processed points removed, can be a nice tool to show how far along
+**Note**: Return the previous list but with processed points removed, can be a nice tool to show how far along
 the path has processed since last time.
 
 ["previous_path_x"] The previous list of x points previously given to the simulator
@@ -89,54 +89,105 @@ A really helpful resource for doing this project and creating smooth trajectorie
     git checkout e94b6e1
     ```
 
-## Editor Settings
+## Project Instructions and [Rubric](https://review.udacity.com/#!/rubrics/1020/view)
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+### Compilation
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+1. The code compiles correctly.
 
-## Code Style
+   Code compiles correctly with `cmake`. No changes were made except formating. New file [src/spline.h](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/spline.h) was added to repo.
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+    ```bash
+    Jinays-Air:build jinay$ cmake ..
+    -- The C compiler identification is AppleClang 10.0.0.10001044
+    -- The CXX compiler identification is AppleClang 10.0.0.10001044
+    -- Check for working C compiler: /Library/Developer/CommandLineTools/usr/bin/cc
+    -- Check for working C compiler: /Library/Developer/CommandLineTools/usr/bin/cc -- works
+    -- Detecting C compiler ABI info
+    -- Detecting C compiler ABI info - done
+    -- Detecting C compile features
+    -- Detecting C compile features - done
+    -- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/c++
+    -- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/c++ -- works
+    -- Detecting CXX compiler ABI info
+    -- Detecting CXX compiler ABI info - done
+    -- Detecting CXX compile features
+    -- Detecting CXX compile features - done
+    -- Configuring done
+    -- Generating done
+    -- Build files have been written to: /Users/jinay/workspace/git-repo/udacity/term3/CarND-Path-Planning-Project/build
+    Jinays-Air:build jinay$ make
+    Scanning dependencies of target path_planning
+    [ 50%] Building CXX object CMakeFiles/path_planning.dir/src/main.cpp.o
+    [100%] Linking CXX executable path_planning
+    ld: warning: directory not found for option '-L/usr/local/Cellar/libuv/1.11.0/lib'
+    [100%] Built target path_planning
+    ```
 
-## Project Instructions and Rubric
+### Valid Trajectories
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+1. The car is able to drive at least 4.32 miles without incident.
 
+   With current implementation, car was able to drive more than `4.32 miles` without any incident.
 
-## Call for IDE Profiles Pull Requests
+   ![capture_04](images/capture_04.png)
 
-Help your fellow students!
+2. The car drives according to the speed limit.
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
+   Car was able to drive well with in the boundary condition of speed limit of `50 MPH`, and no warnings about violating this was seen.
 
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
+   ![capture_01](images/capture_01.png)
 
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
+3. Max Acceleration and Jerk are not Exceeded.
 
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
+   Car was handling lane change and breaking very well that acceleration and jerk were well within boundaries.
 
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
+   ![capture_02](images/capture_02.png)
 
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
+4. Car does not have collisions.
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+   Car had no incidents/collisions observed for the entire duration of the drive of `4.80 miles`.
 
+5. The car stays in its lane, except for the time between changing lanes.
+
+   Car keeps it's lane till there is speed drop or vehicle in front, and there is posibility of lane change.
+
+   ![capture_03](images/capture_03.png)
+
+6. The car is able to change lanes.
+
+   Car was able to change lane when there is slow vehicle in front.
+
+   ![capture_05](images/capture_05.png)
+
+### Reflection
+
+1. There is a reflection on how to generate paths.
+
+   Project had partial implementation/supportive code available in [src/main.cpp](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/main.cpp).
+
+   Following this in order to drive a vehicle, `next_x_values` and `next_y_values` needed to be updated with points for the trajectory. Although in order to derive correct trajectory, we need to do 3 tasks.
+
+    - Prediction
+    - Behavior
+    - Trajectory
+
+   **Prediction** [main.cpp@line 265](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/main.cpp#L265)
+
+    In order to derive correct trajectory it is very essential that we analyze the current environment, which mainly includes relative positions of other vehicle and their lane information.
+
+    This will help ego vehicle to understand whether the traffic car is in ego lane, left lane or right lane.
+
+    To find the car position I have used `d` component of the `frenet` coordinate and `s` componenet for deriving the closeness of the car to ego car. For the case I have taken `30 m` threshold to check for closeness along `s` axis, where as reference point is ego vehicle.
+
+    During prediction, car checks if there is vehicle in front and is near, if so it will look for left (1st preference) and right lanes for car availability. If no car is present to left/right, car provides information to change lane. Note that, as left lane is always prefered first based on traffic law in most of the countries, to let overtaking lane free.
+
+    **Behavior** [main.cpp@line 315](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/main.cpp#L335)
+
+    In this part, car decides what to do next? In case of there is a car in front and no vehicle to left/right, it decides to change lane and continue, otherwise keep the lane. In certain scenarios as observed in simulation, that car can not find free neighboring lanes and hence it has to slow down and continue on the same lane. Although as soon as neighboring lane got free and there is safe change lane possible, car approaches for the lane change.
+
+    **Trajectory** [main.cpp@line 330](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/main.cpp#L330)
+
+    Once car decides the behavior for change lane or keep lane (slow down), it decides the future trajectory and car will approach that path from next sample. In order to make it smoother transition [src/spline.h](https://github.com/jinay1991/CarND-Path-Planning-Project/blob/master/src/spline.h) was used to smoothen the trajectory.
+
+    ![capture_05](images/capture_05.png)
