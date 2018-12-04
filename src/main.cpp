@@ -270,7 +270,6 @@ int main()
                         car_s = end_path_s;
                     }
 
-                    bool too_close = false;
                     bool car_in_front = false;
                     bool car_to_left = false;
                     bool car_to_right = false;
@@ -279,11 +278,12 @@ int main()
                     {
                         int car_lane = -1;
                         float d = sensor_fusion[i][6];
-                        if (d >= 0 && d < 4) // ego lane
+                        if (d > 0 && d < 4) // left lane (near to double solid lane marking)
                             car_lane = 0;
-                        else if (d >= 4 && d < 8) // right lane
+                        else if (d > 4 && d < 8) // center lane
                             car_lane = 1;
-                        else if (d >= 8 && d <= 12) // left lane
+                        else if (d > 8 &&
+                                 d < 12) // right lane (near to the edge of the road)
                             car_lane = 2;
                         else
                             continue;
@@ -297,35 +297,37 @@ int main()
 
                         if (car_lane == lane)
                         {
-                            too_close |=
-                                ((check_car_s > car_s) && ((check_car_s - car_s) < 30));
+                            car_in_front |=
+                                (check_car_s > car_s) && ((check_car_s - car_s) < 30);
                         }
-                        else if (car_lane - lane == 1)
+                        else if (car_lane == lane - 1)
                         {
-                            car_to_right |= ((check_car_s > (car_s - 30)) &&
-                                             ((check_car_s - car_s) < 30));
+                            car_to_left |=
+                                ((car_s - 30) < check_car_s) && ((car_s + 30) > check_car_s);
                         }
-                        else if (lane - car_lane == 1)
+                        else if (car_lane == lane + 1)
                         {
-                            car_to_left |= ((check_car_s > (car_s - 30)) &&
-                                            ((check_car_s - car_s) < 30));
+                            car_to_right |=
+                                ((car_s - 30) < check_car_s) && ((car_s + 30) > check_car_s);
                         }
                     }
 
-                    if (too_close)
+                    if (car_in_front) // blocked by vehicle in ego lane
                     {
-                        if (!car_to_right && lane < 2)
-                            lane++;
+                        if (!car_to_right && lane != 2)
+                            lane++; // change lane to RIGHT
                         else if (!car_to_left && lane > 0)
-                            lane--;
+                            lane--; // change lane to LEFT
                         else
                             ref_vel -= 0.224; // 5 meters per seconds
                     }
                     else
                     {
-                        if (lane != 1)
-                            if ((lane == 2 && !car_to_left) || (lane == 0 && !car_to_right))
-                                lane = 1;
+                        // redirect to center lane
+                        // if (lane != 1)
+                        //     if ((lane == 2 && !car_to_left) || (lane == 0 &&
+                        //     !car_to_right))
+                        //         lane = 1; // change lane to CENTER
                         if (ref_vel < 49.5)
                             ref_vel += 0.224;
                     }
@@ -382,7 +384,6 @@ int main()
                     ptsy.push_back(next_wp1[1]);
                     ptsy.push_back(next_wp2[1]);
 
-                    double dist_inc = 0.3;
                     for (int i = 0; i < ptsx.size(); i++)
                     {
                         double shift_x = ptsx[i] - ref_x;
@@ -409,7 +410,7 @@ int main()
 
                     double x_add_on = 0;
 
-                    for (int i = 1; i <= 50 - previous_path_x.size(); i++)
+                    for (int i = 1; i <= 50 - prev_size; i++)
                     {
                         double N = (target_dist / (0.02f * ref_vel / 2.24f));
                         double x_point = x_add_on + (target_x / N);
