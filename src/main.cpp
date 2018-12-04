@@ -1,10 +1,11 @@
-#include <fstream>
-#include <math.h>
-#include <uWS/uWS.h>
 #include <chrono>
+#include <fstream>
 #include <iostream>
+#include <math.h>
 #include <thread>
+#include <uWS/uWS.h>
 #include <vector>
+
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
@@ -43,10 +44,11 @@ double distance(double x1, double y1, double x2, double y2)
 {
     return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
-int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
+int ClosestWaypoint(double x, double y, const vector<double> &maps_x,
+                    const vector<double> &maps_y)
 {
 
-    double closestLen = 100000; //large number
+    double closestLen = 100000; // large number
     int closestWaypoint = 0;
 
     for (int i = 0; i < maps_x.size(); i++)
@@ -64,7 +66,8 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
     return closestWaypoint;
 }
 
-int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
+int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
+                 const vector<double> &maps_y)
 {
 
     int closestWaypoint = ClosestWaypoint(x, y, maps_x, maps_y);
@@ -90,7 +93,9 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 }
 
 // Transform from Cartesian x,y coordinates to Frenet s,d coordinates
-vector<double> getFrenet(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
+vector<double> getFrenet(double x, double y, double theta,
+                         const vector<double> &maps_x,
+                         const vector<double> &maps_y)
 {
     int next_wp = NextWaypoint(x, y, theta, maps_x, maps_y);
 
@@ -113,7 +118,7 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 
     double frenet_d = distance(x_x, x_y, proj_x, proj_y);
 
-    //see if d value is positive or negative by comparing it to a center point
+    // see if d value is positive or negative by comparing it to a center point
 
     double center_x = 1000 - maps_x[prev_wp];
     double center_y = 2000 - maps_y[prev_wp];
@@ -138,7 +143,9 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 }
 
 // Transform from Frenet s,d coordinates to Cartesian x,y
-vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y)
+vector<double> getXY(double s, double d, const vector<double> &maps_s,
+                     const vector<double> &maps_x,
+                     const vector<double> &maps_y)
 {
     int prev_wp = -1;
 
@@ -149,7 +156,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
     int wp2 = (prev_wp + 1) % maps_x.size();
 
-    double heading = atan2((maps_y[wp2] - maps_y[prev_wp]), (maps_x[wp2] - maps_x[prev_wp]));
+    double heading =
+        atan2((maps_y[wp2] - maps_y[prev_wp]), (maps_x[wp2] - maps_x[prev_wp]));
     // the x,y,s along the segment
     double seg_s = (s - maps_s[prev_wp]);
 
@@ -205,13 +213,15 @@ int main()
     int lane = 1;
     double ref_vel = 0;
 
-    h.onMessage([&ref_vel, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s, &map_waypoints_dx, &map_waypoints_dy, &lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-                                                                                                                              uWS::OpCode opCode) {
+    h.onMessage([&ref_vel, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+                 &map_waypoints_dx, &map_waypoints_dy,
+                 &lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+                        uWS::OpCode opCode) {
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
-        //auto sdata = string(data).substr(0, length);
-        //cout << sdata << endl;
+        // auto sdata = string(data).substr(0, length);
+        // cout << sdata << endl;
 
         if (length && length > 2 && data[0] == '4' && data[1] == '2')
         {
@@ -243,7 +253,8 @@ int main()
                     double end_path_s = j[1]["end_path_s"];
                     double end_path_d = j[1]["end_path_d"];
 
-                    // Sensor Fusion Data, a list of all other cars on the same side of the road.
+                    // Sensor Fusion Data, a list of all other cars on the same side of
+                    // the road.
                     auto sensor_fusion = j[1]["sensor_fusion"];
 
                     json msgJson;
@@ -260,10 +271,10 @@ int main()
                     }
 
                     bool too_close = false;
-
                     bool car_in_front = false;
                     bool car_to_left = false;
                     bool car_to_right = false;
+
                     for (int i = 0; i < sensor_fusion.size(); i++)
                     {
                         int car_lane = -1;
@@ -286,15 +297,18 @@ int main()
 
                         if (car_lane == lane)
                         {
-                            too_close |= ((check_car_s > car_s) && (check_car_s - car_s) < 30);
+                            too_close |=
+                                ((check_car_s > car_s) && (check_car_s - car_s) < 30);
                         }
                         else if (car_lane - lane == 1)
                         {
-                            car_to_right |= (check_car_s > (car_s - 30)) && (check_car_s - car_s) < 30;
+                            car_to_right |=
+                                (check_car_s > (car_s - 30)) && (check_car_s - car_s) < 30;
                         }
                         else if (lane - car_lane == 1)
                         {
-                            car_to_left |= (check_car_s > (car_s - 30) && (check_car_s - car_s) < 30);
+                            car_to_left |=
+                                (check_car_s > (car_s - 30) && (check_car_s - car_s) < 30);
                         }
                     }
 
@@ -350,9 +364,15 @@ int main()
                         ptsy.push_back(ref_y);
                     }
 
-                    vector<double> next_wp0 = getXY(car_s + 30, (2 + (4 * lane)), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-                    vector<double> next_wp1 = getXY(car_s + 60, (2 + (4 * lane)), map_waypoints_s, map_waypoints_x, map_waypoints_y);
-                    vector<double> next_wp2 = getXY(car_s + 90, (2 + (4 * lane)), map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                    vector<double> next_wp0 =
+                        getXY(car_s + 30, (2 + (4 * lane)), map_waypoints_s,
+                              map_waypoints_x, map_waypoints_y);
+                    vector<double> next_wp1 =
+                        getXY(car_s + 60, (2 + (4 * lane)), map_waypoints_s,
+                              map_waypoints_x, map_waypoints_y);
+                    vector<double> next_wp2 =
+                        getXY(car_s + 90, (2 + (4 * lane)), map_waypoints_s,
+                              map_waypoints_x, map_waypoints_y);
 
                     ptsx.push_back(next_wp0[0]);
                     ptsx.push_back(next_wp1[0]);
@@ -384,7 +404,8 @@ int main()
 
                     double target_x = 30.0;
                     double target_y = s(target_x);
-                    double target_dist = sqrt((target_x * target_x) + (target_y * target_y));
+                    double target_dist =
+                        sqrt((target_x * target_x) + (target_y * target_y));
 
                     double x_add_on = 0;
 
@@ -409,13 +430,14 @@ int main()
                         next_y_vals.push_back(y_point);
                     }
                     // ##############################################################
-                    // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+                    // TODO: define a path made up of (x,y) points that the car will visit
+                    // sequentially every .02 seconds
                     msgJson["next_x"] = next_x_vals;
                     msgJson["next_y"] = next_y_vals;
 
                     auto msg = "42[\"control\"," + msgJson.dump() + "]";
 
-                    //this_thread::sleep_for(chrono::milliseconds(1000));
+                    // this_thread::sleep_for(chrono::milliseconds(1000));
                     ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
                 }
             }
