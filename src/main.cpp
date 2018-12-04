@@ -279,11 +279,11 @@ int main()
                     {
                         int car_lane = -1;
                         float d = sensor_fusion[i][6];
-                        if (d >= 0 && d < 4)
+                        if (d >= 0 && d < 4) // ego lane
                             car_lane = 0;
-                        else if (d >= 4 && d < 8)
+                        else if (d >= 4 && d < 8) // right lane
                             car_lane = 1;
-                        else if (d >= 8 && d <= 12)
+                        else if (d >= 8 && d <= 12) // left lane
                             car_lane = 2;
                         else
                             continue;
@@ -298,17 +298,17 @@ int main()
                         if (car_lane == lane)
                         {
                             too_close |=
-                                ((check_car_s > car_s) && (check_car_s - car_s) < 30);
+                                ((check_car_s > car_s) && ((check_car_s - car_s) < 30));
                         }
                         else if (car_lane - lane == 1)
                         {
-                            car_to_right |=
-                                (check_car_s > (car_s - 30)) && (check_car_s - car_s) < 30;
+                            car_to_right |= ((check_car_s > (car_s - 30)) &&
+                                             ((check_car_s - car_s) < 30));
                         }
                         else if (lane - car_lane == 1)
                         {
-                            car_to_left |=
-                                (check_car_s > (car_s - 30) && (check_car_s - car_s) < 30);
+                            car_to_left |= ((check_car_s > (car_s - 30)) &&
+                                            ((check_car_s - car_s) < 30));
                         }
                     }
 
@@ -430,7 +430,6 @@ int main()
                         next_y_vals.push_back(y_point);
                     }
                     // ##############################################################
-                    // TODO: define a path made up of (x,y) points that the car will visit
                     // sequentially every .02 seconds
                     msgJson["next_x"] = next_x_vals;
                     msgJson["next_y"] = next_y_vals;
